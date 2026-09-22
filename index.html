@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Calculadora de fecha de pago para compras de una tarjeta de crédito BCP Visa, usando el cronograma 2026 proporcionado." />
+  <title>Calculadora de Fecha de Pago — BCP Visa</title>
+  <style>
+    :root{
+      --blue:#063b97;
+      --blue-2:#0a56c7;
+      --blue-3:#eaf2ff;
+      --orange:#f86a11;
+      --ink:#10213a;
+      --muted:#64748b;
+      --line:#dbe4f0;
+      --bg:#f4f7fb;
+      --white:#fff;
+      --green:#147a45;
+      --shadow:0 18px 45px rgba(9,42,91,.12);
+      --radius:22px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      color:var(--ink);
+      background:linear-gradient(180deg,#eaf2ff 0 320px,var(--bg) 320px 100%);
+    }
+    .wrap{max-width:1080px;margin:0 auto;padding:28px 20px 56px}
+    header{
+      color:#fff;
+      background:linear-gradient(135deg,#04266e,#0a54bd 72%,#0d6bd9);
+      border-radius:26px;
+      padding:30px 34px;
+      box-shadow:var(--shadow);
+      position:relative;
+      overflow:hidden;
+    }
+    header::after{
+      content:""; position:absolute; width:260px;height:260px;border-radius:50%;right:-80px;top:-120px;
+      background:rgba(255,255,255,.08)
+    }
+    .brand{font-size:14px;letter-spacing:.08em;text-transform:uppercase;opacity:.85;font-weight:700}
+    h1{margin:7px 0 10px;font-size:clamp(30px,5vw,52px);line-height:1.04;max-width:760px}
+    .lead{margin:0;max-width:720px;color:#e6efff;font-size:16px;line-height:1.55}
+    .orange-line{height:5px;width:110px;background:var(--orange);border-radius:999px;margin-top:22px}
+
+    .grid{display:grid;grid-template-columns:1.15fr .85fr;gap:20px;margin-top:20px}
+    .card{background:var(--white);border:1px solid rgba(13,67,149,.08);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px}
+    .card h2{margin:0 0 8px;font-size:23px}
+    .sub{margin:0 0 20px;color:var(--muted);line-height:1.5;font-size:14px}
+    label{display:block;font-weight:750;font-size:14px;margin:0 0 7px}
+    .field{margin-bottom:16px}
+    input,button,select{font:inherit}
+    input[type="date"],input[type="number"]{
+      width:100%;border:1.5px solid var(--line);border-radius:13px;padding:13px 14px;outline:none;background:#fff;color:var(--ink);transition:.18s
+    }
+    input:focus{border-color:var(--blue-2);box-shadow:0 0 0 4px rgba(10,86,199,.1)}
+    .amount-wrap{position:relative}
+    .amount-wrap span{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-weight:700;color:#66758b}
+    .amount-wrap input{padding-left:42px}
+    .btn{border:0;border-radius:13px;background:var(--orange);color:#fff;padding:14px 18px;font-weight:800;cursor:pointer;width:100%;box-shadow:0 9px 18px rgba(248,106,17,.2)}
+    .btn:hover{filter:brightness(.96);transform:translateY(-1px)}
+    .btn:active{transform:translateY(0)}
+
+    .result{margin-top:18px;background:linear-gradient(180deg,#f7fbff,#edf5ff);border:1px solid #cfe0f7;border-radius:18px;padding:18px;display:none}
+    .result.show{display:block}
+    .badge{display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid #d6e4f8;color:var(--blue);padding:7px 10px;border-radius:999px;font-size:12px;font-weight:800}
+    .result-title{margin:12px 0 3px;color:var(--muted);font-size:13px;font-weight:700}
+    .due{font-size:31px;font-weight:900;color:var(--blue);line-height:1.12}
+    .detail{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:15px}
+    .mini{background:#fff;border:1px solid #e2e9f3;border-radius:13px;padding:11px 12px}
+    .mini span{display:block;color:var(--muted);font-size:11px;margin-bottom:3px}
+    .mini strong{font-size:13px}
+    .notice{margin-top:13px;color:#5e6b7d;font-size:12px;line-height:1.5}
+
+    .side-stat{display:flex;align-items:flex-start;gap:13px;padding:15px 0;border-bottom:1px solid #e7edf5}
+    .side-stat:last-child{border-bottom:0}
+    .icon{width:41px;height:41px;display:grid;place-items:center;border-radius:12px;background:var(--blue-3);color:var(--blue);font-weight:900;flex:none}
+    .side-stat strong{display:block;font-size:14px;margin-bottom:4px}
+    .side-stat span{color:var(--muted);font-size:13px;line-height:1.45}
+    .accent{color:var(--orange)}
+
+    .schedule{margin-top:20px}
+    .schedule .sub{margin-bottom:12px}
+    .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:15px}
+    table{border-collapse:collapse;width:100%;min-width:680px;background:#fff}
+    th{background:#063b97;color:#fff;text-align:left;padding:12px 13px;font-size:12px;white-space:nowrap}
+    td{padding:11px 13px;border-top:1px solid #e8edf4;font-size:13px}
+    tr.highlight td{background:#fff7f1}
+    tr.highlight td:first-child{font-weight:800;color:var(--orange)}
+
+    .planner{margin-top:20px}
+    .planner-head{display:flex;align-items:end;justify-content:space-between;gap:15px;margin-bottom:16px}
+    .planner-head h2{margin:0}
+    .total{font-size:14px;color:var(--muted)}
+    .total strong{color:var(--ink);font-size:20px}
+    .empty{padding:28px;text-align:center;color:var(--muted);border:1px dashed #cdd8e7;border-radius:15px;background:#fbfdff}
+    .purchase{display:grid;grid-template-columns:1fr 125px 165px 42px;gap:12px;align-items:center;padding:13px 0;border-top:1px solid #ebeff5}
+    .purchase:first-child{border-top:0}
+    .purchase-main strong{display:block;font-size:14px}
+    .purchase-main span{display:block;color:var(--muted);font-size:12px;margin-top:3px}
+    .pill{display:inline-block;border-radius:999px;background:#edf5ff;color:var(--blue);padding:6px 8px;font-size:11px;font-weight:800}
+    .delete{border:0;background:#f2f5f9;width:36px;height:36px;border-radius:10px;cursor:pointer;color:#66758b;font-weight:900}
+    .delete:hover{background:#e9eef5}
+    .planner-add{display:grid;grid-template-columns:1fr 180px 130px;gap:10px;align-items:end;margin-top:14px}
+    .planner-add .btn{width:auto}
+
+    footer{margin-top:24px;color:#748197;font-size:11px;line-height:1.6}
+    @media (max-width:850px){
+      .grid{grid-template-columns:1fr}
+    }
+    @media (max-width:650px){
+      .wrap{padding:16px 12px 40px}
+      header{padding:24px 22px;border-radius:20px}
+      .card{padding:18px;border-radius:18px}
+      .detail{grid-template-columns:1fr}
+      .purchase{grid-template-columns:1fr 1fr 36px}
+      .purchase > :nth-child(3){grid-column:2}
+      .purchase > :nth-child(4){grid-column:3;grid-row:1}
+      .planner-add{grid-template-columns:1fr}
+      .planner-add .btn{width:100%}
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <div class="brand">Calculadora de tarjeta · Visa</div>
+      <h1>¿Hoy gastas S/ cuánto? Te digo cuándo lo pagas.</h1>
+      <p class="lead">Ingresa la fecha de tu compra y el monto. La calculadora ubica la compra en el ciclo de facturación y muestra la fecha límite de pago indicada en el cronograma 2026 que compartiste.</p>
+      <div class="orange-line"></div>
+    </header>
+
+    <section class="grid">
+      <div class="card">
+        <h2>Calcular fecha de pago</h2>
+        <p class="sub">Para compras normales, sin considerar cuotas, intereses ni otros cargos.</p>
+
+        <div class="field">
+          <label for="purchaseDate">Fecha de la compra</label>
+          <input id="purchaseDate" type="date" />
+        </div>
+
+        <div class="field">
+          <label for="purchaseAmount">Monto de la compra</label>
+          <div class="amount-wrap">
+            <span>S/</span>
+            <input id="purchaseAmount" type="number" min="0" step="0.01" placeholder="0.00" />
+          </div>
+        </div>
+
+        <button class="btn" id="calculateBtn">Calcular fecha de pago</button>
+
+        <div class="result" id="result">
+          <span class="badge">✓ Compra ubicada en un ciclo</span>
+          <div class="result-title">Fecha límite de pago total</div>
+          <div class="due" id="dueDate">—</div>
+          <div class="detail">
+            <div class="mini"><span>Compra</span><strong id="rAmount">—</strong></div>
+            <div class="mini"><span>Periodo de facturación</span><strong id="rCycle">—</strong></div>
+            <div class="mini"><span>Cierre del ciclo</span><strong id="rClose">—</strong></div>
+            <div class="mini"><span>Días desde la compra</span><strong id="rDays">—</strong></div>
+          </div>
+          <div class="notice" id="rNotice"></div>
+        </div>
+      </div>
+
+      <aside class="card">
+        <h2>Cómo funciona</h2>
+        <p class="sub">La fecha depende del ciclo en el que caiga tu compra, no solamente del día en que compres.</p>
+        <div class="side-stat">
+          <div class="icon">25</div>
+          <div><strong>Cierre de facturación</strong><span>El cronograma indica un cierre alrededor del día 25, con algunos cierres movidos a día hábil.</span></div>
+        </div>
+        <div class="side-stat">
+          <div class="icon">→</div>
+          <div><strong>Compra → ciclo</strong><span>La compra se asigna al periodo exacto mostrado en el cronograma 2026.</span></div>
+        </div>
+        <div class="side-stat">
+          <div class="icon accent">S/</div>
+          <div><strong>Pago total</strong><span>El resultado es la <b>fecha límite</b> del estado de cuenta. El monto mostrado es el de la compra ingresada.</span></div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="card planner">
+      <div class="planner-head">
+        <div>
+          <h2>Planificador de compras</h2>
+          <p class="sub" style="margin-top:6px;margin-bottom:0">Agrega varias compras para ver cuánto acumulas y en qué fecha corresponde pagar cada una.</p>
+        </div>
+        <div class="total">Total registrado<br><strong id="grandTotal">S/ 0.00</strong></div>
+      </div>
+
+      <div id="purchaseList" class="empty">Todavía no has agregado compras.</div>
+
+      <div class="planner-add">
+        <div class="field" style="margin-bottom:0">
+          <label for="addDate">Fecha</label>
+          <input id="addDate" type="date" />
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label for="addAmount">Monto</label>
+          <div class="amount-wrap">
+            <span>S/</span>
+            <input id="addAmount" type="number" min="0" step="0.01" placeholder="0.00" />
+          </div>
+        </div>
+        <button class="btn" id="addBtn">+ Agregar compra</button>
+      </div>
+    </section>
+
+    <section class="card schedule">
+      <h2>Cronograma cargado</h2>
+      <p class="sub">Datos transcritos de la imagen que compartiste. El ciclo resaltado cambia automáticamente según la fecha que consultes.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Ciclo</th><th>Consumos desde</th><th>Consumos hasta</th><th>Fecha de pago</th></tr></thead>
+          <tbody id="scheduleBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer>
+      Esta herramienta usa exclusivamente el cronograma 2026 visible en la imagen proporcionada. No calcula cuotas, intereses, comisiones ni compras que estén fuera del cronograma cargado. Verifica siempre la fecha de pago que aparezca en tu estado de cuenta o en los canales oficiales del banco.
+    </footer>
+  </main>
+
+  <script>
+    const schedule = [
+      {cycle:'Enero 2026', start:'2025-12-25', end:'2026-01-23', due:'2026-02-23'},
+      {cycle:'Febrero 2026', start:'2026-01-24', end:'2026-02-25', due:'2026-03-23'},
+      {cycle:'Marzo 2026', start:'2026-02-26', end:'2026-03-25', due:'2026-04-21'},
+      {cycle:'Abril 2026', start:'2026-03-26', end:'2026-04-24', due:'2026-05-20'},
+      {cycle:'Mayo 2026', start:'2026-04-25', end:'2026-05-25', due:'2026-06-22'},
+      {cycle:'Junio 2026', start:'2026-05-26', end:'2026-06-25', due:'2026-07-21'},
+      {cycle:'Julio 2026', start:'2026-06-26', end:'2026-07-24', due:'2026-08-20'},
+      {cycle:'Agosto 2026', start:'2026-07-25', end:'2026-08-25', due:'2026-09-22'},
+      {cycle:'Septiembre 2026', start:'2026-08-26', end:'2026-09-25', due:'2026-10-20'},
+      {cycle:'Octubre 2026', start:'2026-09-26', end:'2026-10-23', due:'2026-11-23'},
+      {cycle:'Noviembre 2026', start:'2026-10-24', end:'2026-11-25', due:'2026-12-22'},
+      {cycle:'Diciembre 2026', start:'2026-11-26', end:'2026-12-24', due:'2027-01-20'}
+    ];
+
+    const fmtDate = (iso, weekday=true) => {
+      const d = new Date(iso + 'T12:00:00');
+      return new Intl.DateTimeFormat('es-PE', weekday ? {weekday:'long', day:'numeric', month:'long', year:'numeric'} : {day:'numeric', month:'short', year:'numeric'}).format(d);
+    };
+    const fmtMoney = n => new Intl.NumberFormat('es-PE',{style:'currency',currency:'PEN',minimumFractionDigits:2}).format(n);
+    const toDate = iso => new Date(iso + 'T12:00:00');
+
+    function todayISO(){
+      const d = new Date();
+      const m = String(d.getMonth()+1).padStart(2,'0');
+      const day = String(d.getDate()).padStart(2,'0');
+      return `${d.getFullYear()}-${m}-${day}`;
+    }
+
+    function findCycle(iso){
+      return schedule.find(s => iso >= s.start && iso <= s.end) || null;
+    }
+
+    function daysBetween(a,b){
+      return Math.round((toDate(b)-toDate(a))/86400000);
+    }
+
+    const purchaseDate = document.getElementById('purchaseDate');
+    const purchaseAmount = document.getElementById('purchaseAmount');
+    const addDate = document.getElementById('addDate');
+    purchaseDate.value = todayISO();
+    addDate.value = todayISO();
+
+    function renderSchedule(highlightIso=''){
+      const body = document.getElementById('scheduleBody');
+      body.innerHTML = schedule.map(s => `
+        <tr class="${highlightIso >= s.start && highlightIso <= s.end ? 'highlight' : ''}">
+          <td>${s.cycle}</td>
+          <td>${fmtDate(s.start,false)}</td>
+          <td>${fmtDate(s.end,false)}</td>
+          <td>${fmtDate(s.due,false)}</td>
+        </tr>`).join('');
+    }
+    renderSchedule(todayISO());
+
+    function calculate(dateIso=purchaseDate.value, amount=Number(purchaseAmount.value)){
+      const result = document.getElementById('result');
+      if(!dateIso){ alert('Selecciona una fecha de compra.'); return null; }
+      const cycle = findCycle(dateIso);
+      if(!cycle){
+        result.classList.add('show');
+        document.getElementById('dueDate').textContent = 'Fecha no disponible';
+        document.getElementById('rAmount').textContent = amount > 0 ? fmtMoney(amount) : '—';
+        document.getElementById('rCycle').textContent = 'Fuera del cronograma';
+        document.getElementById('rClose').textContent = '—';
+        document.getElementById('rDays').textContent = '—';
+        document.getElementById('rNotice').textContent = 'El cronograma cargado cubre compras del 25/12/2025 al 24/12/2026. Para otras fechas hace falta el cronograma correspondiente.';
+        renderSchedule('');
+        return null;
+      }
+      const days = daysBetween(dateIso, cycle.due);
+      document.getElementById('dueDate').textContent = fmtDate(cycle.due);
+      document.getElementById('rAmount').textContent = amount > 0 ? fmtMoney(amount) : 'No indicado';
+      document.getElementById('rCycle').textContent = cycle.cycle;
+      document.getElementById('rClose').textContent = fmtDate(cycle.end,false);
+      document.getElementById('rDays').textContent = `${days} día${days===1?'':'s'}`;
+      document.getElementById('rNotice').innerHTML = `La compra del <b>${fmtDate(dateIso,false)}</b> cae en el ciclo <b>${cycle.cycle}</b>. Según el cronograma cargado, el pago total vence el <b>${fmtDate(cycle.due,false)}</b>.`;
+      result.classList.add('show');
+      renderSchedule(dateIso);
+      return cycle;
+    }
+
+    document.getElementById('calculateBtn').addEventListener('click', () => calculate());
+    [purchaseDate,purchaseAmount].forEach(el=>el.addEventListener('keydown', e=>{ if(e.key==='Enter') calculate(); }));
+    purchaseDate.addEventListener('change',()=>renderSchedule(purchaseDate.value));
+
+    let purchases = [];
+    function renderPurchases(){
+      const list = document.getElementById('purchaseList');
+      document.getElementById('grandTotal').textContent = fmtMoney(purchases.reduce((a,p)=>a+p.amount,0));
+      if(!purchases.length){ list.className='empty'; list.textContent='Todavía no has agregado compras.'; return; }
+      list.className='';
+      purchases.sort((a,b)=>a.date.localeCompare(b.date));
+      list.innerHTML = purchases.map((p,i)=>{
+        const c=findCycle(p.date);
+        return `<div class="purchase">
+          <div class="purchase-main"><strong>${fmtDate(p.date,false)}</strong><span>${c ? c.cycle + ' · pago ' + fmtDate(c.due,false) : 'Fuera del cronograma cargado'}</span></div>
+          <div><span class="pill">${fmtMoney(p.amount)}</span></div>
+          <div><span class="pill">${c ? fmtDate(c.due,false) : '—'}</span></div>
+          <button class="delete" aria-label="Eliminar compra" data-index="${i}">×</button>
+        </div>`;
+      }).join('');
+      list.querySelectorAll('.delete').forEach(btn=>btn.addEventListener('click',()=>{ purchases.splice(Number(btn.dataset.index),1); renderPurchases(); }));
+    }
+
+    document.getElementById('addBtn').addEventListener('click',()=>{
+      const amount=Number(document.getElementById('addAmount').value);
+      const date=document.getElementById('addDate').value;
+      if(!date || !(amount>0)){ alert('Ingresa una fecha y un monto mayor a S/ 0.'); return; }
+      purchases.push({date,amount});
+      document.getElementById('addAmount').value='';
+      renderPurchases();
+    });
+  </script>
+</body>
+</html>
