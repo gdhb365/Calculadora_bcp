@@ -5,6 +5,30 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Consulta tu fecha de pago y organiza compras con el cronograma BCP Visa 2026.">
 <title>Fecha de pago · BCP Visa</title>
+<script>
+// Apply the saved theme before the first paint.
+(() => {
+  const root = document.documentElement;
+  const system = typeof matchMedia === 'function' ? matchMedia('(prefers-color-scheme: dark)') : null;
+  let preference = 'system';
+  try {
+    const saved = localStorage.getItem('bcp-theme-v1');
+    if (['light', 'dark', 'system'].includes(saved)) preference = saved;
+  } catch {}
+  const apply = () => {
+    root.dataset.theme = preference === 'system' ? (system?.matches ? 'dark' : 'light') : preference;
+    root.dataset.themePreference = preference;
+  };
+  window.setCalculatorTheme = value => {
+    if (!['light', 'dark', 'system'].includes(value)) return;
+    preference = value;
+    apply();
+    try { localStorage.setItem('bcp-theme-v1', value); } catch {}
+  };
+  system?.addEventListener('change', apply);
+  apply();
+})();
+</script>
 <style>
 :root{--blue:#063b97;--ink:#182b49;--muted:#59697e;--line:#dfe5ed;--bg:#f6f8fb;--orange:#b94a00;--radius:18px}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:16px;line-height:1.5}
@@ -25,11 +49,33 @@ details{border-top:1px solid var(--line)}summary{min-height:48px;padding:16px 0;
 .secondary{margin-top:24px}.secondary details:first-child{border-top:0}.secondary p{color:var(--muted);font-size:14px;margin:0 0 14px}
 .table-wrap{overflow:auto;margin:0 0 16px}table{border-collapse:collapse;width:100%;min-width:580px;text-align:left;font-size:14px}th,td{padding:12px;border-bottom:1px solid var(--line)}th{color:var(--muted);font-weight:650}tr.highlight{background:#edf3fc}tr.highlight td:first-child{font-weight:750;color:var(--blue)}footer{font-size:13px;color:var(--muted);margin-top:24px;max-width:800px}
 @media(max-width:700px){.wrap{padding:24px 16px 32px}.workspace{grid-template-columns:1fr;gap:16px}.card{padding:20px}.section-head{flex-direction:column;gap:12px}.total{text-align:left}.total strong{display:inline;margin-left:8px}.purchase{flex-wrap:wrap;gap:8px}.purchase-main{min-width:120px}.delete{margin-left:auto}.due{font-size:32px}summary .group-total{float:none;display:block;margin:4px 0 0 18px}}
+:root{color-scheme:light}
+.header-top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.theme-control{display:flex;align-items:center;gap:8px}
+.theme-control label{margin:0;color:var(--muted)}
+.theme-control select{font:inherit;font-size:14px;min-height:44px;max-width:100%;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}
+input::placeholder{color:var(--muted);opacity:1}
+html[data-theme="dark"]{color-scheme:dark;--blue:#96bdff;--ink:#e2e8f0;--muted:#a6b0bf;--line:#303640;--bg:#000;--orange:#ffba85}
+html[data-theme="dark"] .card,
+html[data-theme="dark"] input,
+html[data-theme="dark"] button,
+html[data-theme="dark"] .theme-control select{background:#000}
+html[data-theme="dark"] input{border-color:#596475}
+html[data-theme="dark"] input[aria-invalid="true"]{border-color:#ff9d99}
+html[data-theme="dark"] .metrics{border-color:var(--line)}
+html[data-theme="dark"] .primary{background:#96bdff;border-color:#96bdff;color:#071426}
+html[data-theme="dark"] button:hover,
+html[data-theme="dark"] tr.highlight,
+html[data-theme="dark"] .feedback{background:#111820}
+html[data-theme="dark"] .primary:hover{background:#b5d1ff}
+html[data-theme="dark"] .result.invalid{background:#000}
+html[data-theme="dark"] .error{color:#ff9d99}
+html[data-theme="dark"] :focus-visible{outline-color:#96bdff}
 </style>
 </head>
 <body>
 <main class="wrap">
-<header><div class="eyebrow">BCP Visa · Cronograma 2026</div><h1>¿Cuándo pago mi compra?</h1><p class="muted">Consulta la fecha y organiza tus próximos pagos.</p></header>
+<header><div class="header-top"><div class="eyebrow">BCP Visa · Cronograma 2026</div><div class="theme-control"><label for="themeSelect">Tema</label><select id="themeSelect"><option value="system">Sistema</option><option value="light">Claro</option><option value="dark">Oscuro OLED</option></select></div></div><h1>¿Cuándo pago mi compra?</h1><p class="muted">Consulta la fecha y organiza tus próximos pagos.</p></header>
 <section class="workspace" aria-label="Calculadora de fecha de pago">
 <form class="card" id="purchaseForm" novalidate>
 <h2>Tu compra</h2><p class="help">La fecha se actualiza al cambiar los datos.</p>
@@ -71,6 +117,9 @@ const schedule = [
       {cycle:'Diciembre 2026', start:'2026-11-26', end:'2026-12-24', due:'2027-01-20'}
     ];
 const $ = id => document.getElementById(id);
+const themeSelect = $('themeSelect');
+themeSelect.value = document.documentElement.dataset.themePreference;
+themeSelect.addEventListener('change', () => window.setCalculatorTheme(themeSelect.value));
 const fmtMoney = n => new Intl.NumberFormat('es-PE',{style:'currency',currency:'PEN',minimumFractionDigits:2}).format(n);
 const toDate = iso => new Date(iso + 'T12:00:00');
 const fmtDate = iso => new Intl.DateTimeFormat('es-PE',{day:'numeric',month:'short',year:'numeric'}).format(toDate(iso));
