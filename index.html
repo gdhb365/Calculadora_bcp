@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Consulta tu fecha de pago y organiza compras con el cronograma BCP Visa 2026."
+    />
+    <title>Fecha de pago · BCP Visa</title>
+    <script src="js/theme.js"></script>
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <main class="wrap">
+      <header>
+        <h1 class="page-title">BCP VISA · CRONOGRAMA 2026</h1>
+        <div class="header-top">
+          <div class="theme-control">
+            <button
+              class="theme-toggle"
+              id="themeToggle"
+              type="button"
+              aria-label="Modo oscuro"
+              aria-pressed="false"
+              title="Cambiar a oscuro"
+            >
+              <svg
+                id="themeSun"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                aria-hidden="true"
+              >
+                <circle cx="12" cy="12" r="4" />
+                <path
+                  d="M12 2v2m0 16v2M2 12h2m16 0h2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42m0-14.14-1.42 1.42m-11.3 11.3-1.42 1.42"
+                /></svg
+              ><svg
+                id="themeMoon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+                hidden
+              >
+                <path
+                  d="M20.9 13.1A9 9 0 0 1 10.9 3.1 9 9 0 1 0 20.9 13.1Z"
+                /></svg
+              ><span id="themeLabel">Claro</span>
+            </button>
+          </div>
+        </div>
+        <h2 class="header-question">¿Cuándo pago mi compra?</h2>
+        <p class="muted">Consulta la fecha y organiza tus próximos pagos.</p>
+      </header>
+      <section class="workspace" aria-label="Calculadora de fecha de pago">
+        <form class="card" id="purchaseForm" novalidate>
+          <h2>Tu compra</h2>
+          <p class="help">La fecha se actualiza al cambiar los datos.</p>
+          <div class="field">
+            <label for="purchaseDate">Fecha de compra</label
+            ><input
+              id="purchaseDate"
+              type="date"
+              required
+              aria-describedby="dateHelp dateError"
+            />
+            <p class="help" id="dateHelp">Del 25 dic 2025 al 24 dic 2026.</p>
+            <p class="error" id="dateError"></p>
+          </div>
+          <div class="field">
+            <label for="purchaseAmount"
+              >Monto <span>· opcional para consultar</span></label
+            >
+            <div class="amount">
+              <span aria-hidden="true">S/</span
+              ><input
+                id="purchaseAmount"
+                type="number"
+                min="0.01"
+                step="0.01"
+                inputmode="decimal"
+                placeholder="0.00"
+                aria-describedby="amountError"
+              />
+            </div>
+            <p class="error" id="amountError"></p>
+          </div>
+          <button class="primary" type="submit">Guardar esta compra</button>
+          <p class="help">Para guardarla, ingresa un monto mayor a S/ 0.</p>
+        </form>
+        <section
+          class="card result"
+          id="result"
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          <p class="result-label" id="resultLabel">Fecha límite de pago</p>
+          <h2 class="due" id="dueDate">—</h2>
+          <p class="weekday" id="weekday"></p>
+          <dl class="metrics" id="metrics">
+            <div>
+              <dt>Monto de la compra</dt>
+              <dd id="rAmount">—</dd>
+            </div>
+            <div>
+              <dt>Ciclo de facturación</dt>
+              <dd id="rCycle">—</dd>
+            </div>
+            <div>
+              <dt>Cierre del ciclo</dt>
+              <dd id="rClose">—</dd>
+            </div>
+            <div>
+              <dt>De la compra al pago</dt>
+              <dd id="rDays">—</dd>
+            </div>
+          </dl>
+          <p class="help" id="rNotice"></p>
+        </section>
+      </section>
+      <section class="card tips" aria-labelledby="tipsTitle">
+        <h2 id="tipsTitle">Consejos para usar tu tarjeta</h2>
+        <ul>
+          <li>
+            Se aconseja pagar
+            <strong>5 días antes de la fecha límite de pago</strong> para contar
+            con un margen de anticipación.
+          </li>
+          <li>
+            Procura
+            <strong>no consumir más del 60% de tu línea de crédito</strong>.
+          </li>
+        </ul>
+      </section>
+      <section class="card planner" aria-labelledby="plannerTitle">
+        <div class="section-head">
+          <div>
+            <h2 id="plannerTitle">Tus pagos</h2>
+            <p class="help">Compras agrupadas por fecha de vencimiento.</p>
+          </div>
+          <p class="total">
+            Total registrado <strong id="grandTotal">S/ 0.00</strong>
+          </p>
+        </div>
+        <div id="purchaseList"></div>
+        <div class="feedback" id="feedback" hidden>
+          <span id="feedbackText" role="status"></span
+          ><button id="undoBtn" type="button" hidden>Deshacer</button>
+        </div>
+        <p class="storage" id="storageNotice">
+          Tus compras se guardan en este navegador.
+        </p>
+      </section>
+      <section class="card secondary" aria-label="Información del cronograma">
+        <details>
+          <summary>Cómo funciona</summary>
+          <p>
+            La fecha de compra determina el ciclo de facturación. Cada ciclo
+            tiene un cierre y una fecha límite de pago, según el cronograma
+            cargado.
+          </p>
+          <p>
+            El monto corresponde únicamente a las compras que registras. No
+            incluye cuotas, intereses, comisiones ni otros cargos.
+          </p>
+        </details>
+        <details>
+          <summary>Ver cronograma 2026</summary>
+          <p>
+            El ciclo de la fecha consultada aparece resaltado. Este cronograma
+            cubre compras del 25 de diciembre de 2025 al 24 de diciembre de
+            2026.
+          </p>
+          <div
+            class="table-wrap"
+            tabindex="0"
+            role="region"
+            aria-label="Cronograma de ciclos, desplazable horizontalmente"
+          >
+            <table>
+              <caption class="help">
+                Periodos de compra y fechas de pago
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">Ciclo</th>
+                  <th scope="col">Desde</th>
+                  <th scope="col">Hasta</th>
+                  <th scope="col">Pago</th>
+                </tr>
+              </thead>
+              <tbody id="scheduleBody"></tbody>
+            </table>
+          </div>
+        </details>
+      </section>
+      <footer>
+        Herramienta independiente basada en el cronograma cargado de 2026.
+        Confirma que corresponda a tu tarjeta y verifica el vencimiento en tu
+        estado de cuenta o en los canales oficiales del banco.
+      </footer>
+    </main>
+    <script src="js/calculator.js" defer></script>
+    <script src="js/app.js" defer></script>
+  </body>
+</html>
